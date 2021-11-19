@@ -1,2 +1,6 @@
 program exited due to SIGINT
 program exited due to SIGINT
+program exited due to SIGINT
+program exited due to SIGINT
+program exited due to SIGINT
+program exited due to SIGINT

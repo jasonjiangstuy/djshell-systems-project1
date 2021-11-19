@@ -58,9 +58,20 @@ int launch_shell() {
         char *buffer = calloc(100, sizeof(char)); // fix sizing?
         fgets(buffer, 100, stdin);
         char **args = parse_args(buffer);
-        int status = execvp(args[0], args);
-        if (status == -1) {
-            printf("Error with execvp: %s\n", strerror(errno));
+        int f = fork();
+        if (f) {
+            int status;
+            wait(&status);
+            int return_val = WEXITSTATUS(status);
+            continue;
+        } 
+        else {
+            int status = execvp(args[0], args);
+            if (status == -1) {
+                printf("Error with execvp: %s\n", strerror(errno));
+                return errno;
+            }   
+            return 0;
         }
     }
 
