@@ -14,4 +14,9 @@
 #include <time.h>
 #include <dirent.h>
 
+// custom functions
+int launch_shell();
+static void sighandler();
+char **parse_args( char *line );
+
 #endif
