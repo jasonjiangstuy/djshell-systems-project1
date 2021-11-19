@@ -1,7 +1,8 @@
 // Used for main shell functionality
 
 // FIXES: WRITE ALL ERRORS TO ERROR_LOG; WRITE A SEPARATE ERROR FUNCTION
-
+#include <signal.h>
+#include <sys/wait.h>
 #include "shell.h"
 
 // signal handler POSSIBLY REMOVE TO SEPARATE FILE
@@ -36,7 +37,7 @@ char ** parse_args(char *line) {
     char *ptr = strchr(line, '\n');
     *ptr = '\0';
 
-    while ((tmp = strsep(&line, " "))) { 
+    while ((tmp = strsep(&line, " "))) {
         if (errno != 0) {
             printf("Error with parsing args: %s\n", strerror(errno));
             exit(-1);
@@ -44,10 +45,10 @@ char ** parse_args(char *line) {
         arr[counter] = tmp;
         counter++;
     }
-    
+
     return arr;
 
-}   
+}
 
 // main launch loop
 // add fork
@@ -67,13 +68,13 @@ int launch_shell() {
             wait(&status);
             int return_val = WEXITSTATUS(status);
             continue;
-        } 
+        }
         else {
             int status = execvp(args[0], args);
             if (status == -1) {
                 printf("Error with execvp: %s\n", strerror(errno));
                 return errno;
-            }   
+            }
             return 0;
         }
     }
