@@ -1,5 +1,7 @@
 // Used for main shell functionality
 
+// FIXES: WRITE ALL ERRORS TO ERROR_LOG; WRITE A SEPARATE ERROR FUNCTION
+
 #include "shell.h"
 
 // signal handler POSSIBLY REMOVE TO SEPARATE FILE
@@ -25,16 +27,15 @@ char ** parse_args(char *line) {
             counter++;
         }
     }
-    printf("%d\n", counter);
     char **arr = calloc(counter, sizeof(char *));
 
     char *tmp;
 
     counter = 0;
 
-    while ((tmp = strsep(&line, " "))) {
+    while ((tmp = strsep(&line, " ")) && line) { 
         if (errno != 0) {
-            printf("Error: %s\n", strerror(errno));
+            printf("Error with parsing args: %s\n", strerror(errno));
             exit(-1);
         }
         arr[counter] = tmp;
@@ -45,9 +46,8 @@ char ** parse_args(char *line) {
 
 }   
 
-// main launch loop --> gives error with ls: illegal option -- 
-// usage: ls [-@ABCFGHLOPRSTUWabcdefghiklmnopqrstuwx1%] [file ...]
-// if ls -a -l is given
+// main launch loop
+// add fork
 int launch_shell() {
 
     signal(SIGINT, sighandler);
@@ -57,7 +57,6 @@ int launch_shell() {
         printf("djshell$ ");
         char *buffer = calloc(100, sizeof(char)); // fix sizing?
         fgets(buffer, 100, stdin);
-        printf("%s\n", buffer);
         char **args = parse_args(buffer);
         int status = execvp(args[0], args);
         if (status == -1) {
