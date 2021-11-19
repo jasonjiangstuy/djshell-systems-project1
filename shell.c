@@ -33,7 +33,10 @@ char ** parse_args(char *line) {
 
     counter = 0;
 
-    while ((tmp = strsep(&line, " ")) && line) { 
+    char *ptr = strchr(line, '\n');
+    *ptr = '\0';
+
+    while ((tmp = strsep(&line, " "))) { 
         if (errno != 0) {
             printf("Error with parsing args: %s\n", strerror(errno));
             exit(-1);
