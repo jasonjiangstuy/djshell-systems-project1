@@ -22,6 +22,12 @@ static void sighandler(int sig) {
     if (sig == SIGINT) {
         exit(0);
     }
+    if (sig == SIGSEGV) {
+        char *message;
+        strcat(message, strerror(errno));
+        printf("Error: %s", message);
+        log_error(message);
+    }
 }
 
 // basic parsing for argument vector
