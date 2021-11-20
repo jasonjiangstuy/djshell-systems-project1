@@ -23,10 +23,7 @@ static void sighandler(int sig) {
         exit(0);
     }
     if (sig == SIGSEGV) {
-        char *message;
-        strcat(message, strerror(errno));
-        printf("Error: %s", message);
-        log_error(message);
+        log_error(strerror(errno));
     }
 }
 
@@ -61,12 +58,17 @@ char ** parse_args(char *line) {
 // main launch loop
 int launch_shell() {
 
+    signal(SIGSEGV, sighandler);
     signal(SIGINT, sighandler);
 
     printf("Launching shell\n");
     while (1) {
 
-        printf("djshell$ ");
+        char *tmp_path = calloc(CHARMAX, sizeof(char));
+        getcwd(tmp_path, CHARMAX);
+        char *path = strrchr(tmp_path, '/');
+
+        printf("%s djshell $ ", path);
         char *buffer = calloc(CHARMAX, sizeof(char)); // fix sizing?
         fgets(buffer, CHARMAX, stdin);
         char **args = parse_args(buffer);
@@ -75,7 +77,7 @@ int launch_shell() {
             int status;
             wait(&status);
             int return_val = WEXITSTATUS(status);
-            if (!return_val) {
+            if (return_val) {
                 log_error(strerror(errno));
             }
         }
