@@ -1,7 +1,8 @@
 // Used for main shell functionality
 
 // FIXES: WRITE ALL ERRORS TO ERROR_LOG; WRITE A SEPARATE ERROR FUNCTION
-
+#include <signal.h>
+#include <sys/wait.h>
 #include "shell.h"
 
 // Logs errors and events to errorlog
@@ -49,10 +50,10 @@ char ** parse_args(char *line) {
         arr[counter] = tmp;
         counter++;
     }
-    
+
     return arr;
 
-}   
+}
 
 // main launch loop
 // add fork
@@ -75,12 +76,12 @@ int launch_shell() {
                 log_error("Error with execvp\n");
             }
             continue;
-        } 
+        }
         else {
             int status = execvp(args[0], args);
             if (status == -1) {
                 return errno;
-            }   
+            }
             return 0;
         }
     }
