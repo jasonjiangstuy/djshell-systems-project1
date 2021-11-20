@@ -18,9 +18,12 @@
 #include <dirent.h>
 #include <signal.h>
 #include <sys/wait.h>
+#include <ctype.h>
 
 // custom functions
 int launch_shell();
+char * strip(char *line);
+int execute(char **args);
 void log_error(char *message);
 static void sighandler(int sig);
 char **parse_args( char *line );

@@ -43,8 +43,13 @@ char ** parse_args(char *line) {
 
     counter = 0;
 
+
     char *ptr = strchr(line, '\n');
-    *ptr = '\0';
+    if (ptr != NULL) {
+        *ptr = '\0';
+    }
+
+    printf("%s\n", line);
 
     while ((tmp = strsep(&line, " "))) { 
         arr[counter] = tmp;
@@ -53,6 +58,47 @@ char ** parse_args(char *line) {
 
     return arr;
 
+}
+
+int execute(char **args) {
+    int f = fork();
+    if (f) {
+        int status;
+        wait(&status);
+        int return_val = WEXITSTATUS(status);
+        if (return_val) {
+            log_error(strerror(errno));
+        }
+        return 0;
+    }
+    else {
+        int status = execvp(args[0], args);
+        if (status == -1) {
+            return errno;
+        }
+        return 0;
+    }
+}
+
+char * strip(char *line) {
+    char *ptr = line;
+    int i;
+    for (i = 0; i < strlen(line); i++) {
+        if (!isspace(line[i])) {
+            break;
+        }
+        else {
+            ptr++;
+        }
+    }
+    char *end = ptr + strlen(ptr) - 1;
+    for ( ; end != ptr - 1; end--) {
+        if (!isspace(*end)) {
+            break;
+        }
+        *end = '\0';
+    }
+    return ptr;
 }
 
 // main launch loop
@@ -71,23 +117,13 @@ int launch_shell() {
         printf("%s djshell $ ", path);
         char *buffer = calloc(CHARMAX, sizeof(char)); // fix sizing?
         fgets(buffer, CHARMAX, stdin);
-        char **args = parse_args(buffer);
-        int f = fork();
-        if (f) {
-            int status;
-            wait(&status);
-            int return_val = WEXITSTATUS(status);
-            if (return_val) {
-                log_error(strerror(errno));
-            }
+
+        char *tmp;
+        while ((tmp = strsep(&buffer, ";"))) {
+            char **args = parse_args(tmp);
+            execute(args);
         }
-        else {
-            int status = execvp(args[0], args);
-            if (status == -1) {
-                return errno;
-            }
-            return 0;
-        }
+
     }
 
     return 0;
