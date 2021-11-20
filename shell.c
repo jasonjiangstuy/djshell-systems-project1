@@ -14,7 +14,6 @@ void log_error(char *message) {
         printf("Error writing to file: %s\n", strerror(errno));
     }
     w = write(file, "\n", 1);
-    exit(-1);
 }
 
 // signal handler POSSIBLY REMOVE TO SEPARATE FILE
@@ -24,14 +23,14 @@ static void sighandler(int sig) {
     }
     if (sig == SIGSEGV) {
         log_error(strerror(errno));
+        exit(-1);
     }
 }
 
 // basic parsing for argument vector
 char ** parse_args(char *line) {
-    // printf("%s\n", line);
     int i;
-    int counter = 1;
+    int counter = 2;
     for (i = 0; i < strlen(line); i++) {
         if (line[i] == ' ') {
             counter++;
@@ -49,8 +48,6 @@ char ** parse_args(char *line) {
         *ptr = '\0';
     }
 
-    // printf("%s\n", line);
-
     while ((tmp = strsep(&line, " "))) {
         arr[counter] = stripOneWord(tmp);
         counter++;
@@ -61,13 +58,23 @@ char ** parse_args(char *line) {
 }
 
 int execute(char **args) {
+    if (strcmp(args[0], "exit") == 0) {
+        exit(0);
+    }
+    else if (strcmp(args[0], "cd") == 0) {
+        int status = chdir(args[1]);
+        if (status) {
+            return -1;
+        }
+        else return 0;
+    }
     int f = fork();
     if (f) {
         int status;
         wait(&status);
         int return_val = WEXITSTATUS(status);
         if (return_val) {
-            log_error(strerror(errno));
+            return -1;
         }
         return 0;
     }
@@ -81,6 +88,7 @@ int execute(char **args) {
 }
 
 char * stripOneWord(char *line) {
+    
     char *ptr = line;
     char * newline = calloc(strlen(line), 1);
     int nlcounter = 0;
@@ -130,8 +138,16 @@ int launch_shell() {
 
         char *tmp;
         while ((tmp = strsep(&buffer, ";"))) {
+            tmp[strlen(tmp) - 1] = '\0';
+            if (isspace(tmp[0])) {
+                tmp++;
+            } 
             char **args = parse_args(tmp);
-            execute(args);
+            int status = execute(args);
+            if (status != 0) {
+                printf("%s\n", strerror(errno));
+                log_error(strerror(errno));
+            }
         }
 
     }
