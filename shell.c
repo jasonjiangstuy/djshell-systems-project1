@@ -1,29 +1,32 @@
 // Used for main shell functionality
 
-// FIXES: WRITE ALL ERRORS TO ERROR_LOG; WRITE A SEPARATE ERROR FUNCTION
-#include <signal.h>
-#include <sys/wait.h>
 #include "shell.h"
 
 // Logs errors and events to errorlog
 void log_error(char *message) {
     int file = open("error_log.txt", O_CREAT | O_WRONLY | O_APPEND);
+    strcat(message, "\n");
     if (file == -1) {
         printf("Error opening error log: %s\n", strerror(errno));
-        exit(-1);
     }
     int w = write(file, message, strlen(message));
     if (!w) {
         printf("Error writing to file: %s\n", strerror(errno));
-        exit(-1);
     }
-    exit(0);
+    exit(-1);
 }
 
-// signal handler POSSIBLY REMOVE TO SEPARATE FILE
+// signal handler
 static void sighandler(int sig) {
     if (sig == SIGINT) {
-        log_error("program exited due to SIGINT\n");
+        printf("Exiting shell\n");
+        exit(0);
+    }
+    if (sig == SIGSEGV) {
+        char *message;
+        strcat(message, strerror(errno));
+        printf("Error: %s", message);
+        log_error(message);
     }
 }
 
@@ -56,24 +59,24 @@ char ** parse_args(char *line) {
 }
 
 // main launch loop
-// add fork
 int launch_shell() {
 
     signal(SIGINT, sighandler);
 
     printf("Launching shell\n");
     while (1) {
+
         printf("djshell$ ");
         char *buffer = calloc(CHARMAX, sizeof(char)); // fix sizing?
         fgets(buffer, CHARMAX, stdin);
         char **args = parse_args(buffer);
         int f = fork();
         if (f) {
-            int status;
-            wait(&status);
-            int return_val = WEXITSTATUS(status);
+            int f_status;
+            wait(&f_status);
+            int return_val = WEXITSTATUS(f_status);
             if (!return_val) {
-                log_error("Error with execvp\n");
+                log_error(strerror(errno));
             }
             continue;
         }

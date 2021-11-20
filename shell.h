@@ -1,12 +1,9 @@
 // main shell functionality headers
 
-#ifndef MY_SHELL
-#define MY_SHELL "defined"
+#ifndef SHELL
+#define SHELL "defined"
 
-// Compiler variables
-#define CHARMAX 100
-
-// Std includes
+// std includes
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -16,10 +13,16 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <dirent.h>
+#include <signal.h>
+#include <sys/wait.h>
+
+// Compiler variables
+#define CHARMAX 100
 
 // custom functions
 int launch_shell();
-static void sighandler();
+void log_error(char *message);
+static void sighandler(int sig);
 char **parse_args( char *line );
 
 #endif
