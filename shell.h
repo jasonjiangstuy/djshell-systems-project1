@@ -3,6 +3,9 @@
 #ifndef MY_SHELL
 #define MY_SHELL "defined"
 
+// Compiler variables
+#define CHARMAX 100
+
 // Std includes
 #include <stdlib.h>
 #include <stdio.h>
