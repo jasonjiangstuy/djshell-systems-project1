@@ -122,10 +122,18 @@ char * stripOneWord(char *line) {
 // main launch loop
 int launch_shell() {
 
+    printf("Launching shell\n");
+
     signal(SIGSEGV, sighandler);
     signal(SIGINT, sighandler);
 
-    printf("Launching shell\n");
+    int file = open("history.txt", O_CREAT | O_RDWR | O_APPEND);
+    if (file == -1) {
+        printf("Error with launching shell\n");
+        log_error(strerror(errno));
+        exit(0);
+    }
+
     while (1) {
 
         char *tmp_path = calloc(CHARMAX, sizeof(char));
@@ -135,6 +143,8 @@ int launch_shell() {
         printf("%s djshell $ ", path);
         char *buffer = calloc(CHARMAX, sizeof(char)); // fix sizing?
         fgets(buffer, CHARMAX, stdin);
+
+        write(file, buffer, strlen(buffer));
 
         char *tmp;
         while ((tmp = strsep(&buffer, ";"))) {
