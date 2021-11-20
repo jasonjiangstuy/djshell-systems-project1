@@ -1,6 +1,6 @@
 // Used for main shell functionality
 
-// FIXES: WRITE ALL ERRORS TO ERROR_LOG; WRITE A SEPARATE ERROR FUNCTION
+// FIXES: MOVE TO NEW FILES; PARSE ON ;
 #include "shell.h"
 
 // Logs errors and events to errorlog
