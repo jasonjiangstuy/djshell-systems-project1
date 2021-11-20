@@ -134,6 +134,8 @@ int launch_shell() {
         exit(0);
     }
 
+    printf("Please separate all arguments with spaces!\n");
+
     while (1) {
 
         char *tmp_path = calloc(CHARMAX, sizeof(char));
