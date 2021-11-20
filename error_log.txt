@@ -4,3 +4,18 @@ program exited due to SIGINT
 program exited due to SIGINT
 program exited due to SIGINT
 program exited due to SIGINT
+program exited due to SIGINT
+program exited due to SIGINT
+program exited due to SIGINT
+program exited due to SIGINT
+program exited due to SIGINT
+program exited due to SIGINT
+program exited due to SIGINT
+Undefined error: 0
+Undefined error: 0
+Undefined error: 0
+Undefined error: 0
+Undefined error: 0
+Undefined error: 0
+Undefined error: 0
+Undefined error: 0
