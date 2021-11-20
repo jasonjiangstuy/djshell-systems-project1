@@ -3,9 +3,10 @@
 #include "shell.h"
 
 int main() {
-
-    printf("%s\n", strip("   ls -a -l   \n"));
-
+    // printf("TEST\n");
+    // printf("%s\n", stripOneWord("   ls     \t\n"));
+    // char * hi = "   ls -a -l   \n";
+    // parse_args()
     launch_shell();
     return 0;
 }

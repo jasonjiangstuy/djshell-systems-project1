@@ -29,7 +29,7 @@ static void sighandler(int sig) {
 
 // basic parsing for argument vector
 char ** parse_args(char *line) {
-
+    // printf("%s\n", line);
     int i;
     int counter = 1;
     for (i = 0; i < strlen(line); i++) {
@@ -49,10 +49,10 @@ char ** parse_args(char *line) {
         *ptr = '\0';
     }
 
-    printf("%s\n", line);
+    // printf("%s\n", line);
 
-    while ((tmp = strsep(&line, " "))) { 
-        arr[counter] = tmp;
+    while ((tmp = strsep(&line, " "))) {
+        arr[counter] = stripOneWord(tmp);
         counter++;
     }
 
@@ -80,25 +80,35 @@ int execute(char **args) {
     }
 }
 
-char * strip(char *line) {
+char * stripOneWord(char *line) {
     char *ptr = line;
+    char * newline = calloc(strlen(line), 1);
+    int nlcounter = 0;
     int i;
     for (i = 0; i < strlen(line); i++) {
         if (!isspace(line[i])) {
-            break;
-        }
-        else {
-            ptr++;
+          break;
         }
     }
-    char *end = ptr + strlen(ptr) - 1;
-    for ( ; end != ptr - 1; end--) {
-        if (!isspace(*end)) {
-            break;
-        }
-        *end = '\0';
+    // save to another char array
+    for (; i< strlen(line); i++){
+      // disregard everything after white space
+      if (isspace(line[i])) {
+        break;
+      }
+      newline[nlcounter] = line[i];
+      nlcounter++;
     }
-    return ptr;
+
+
+    // // char *end = ptr + strlen(ptr) - 1;
+    // for ( ; end != ptr - 1; end--) {
+    //     if (!isspace(*end)) {
+    //         break;
+    //     }
+    //     *end = '\0';
+    // }
+    return newline;
 }
 
 // main launch loop

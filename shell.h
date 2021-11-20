@@ -22,7 +22,7 @@
 
 // custom functions
 int launch_shell();
-char * strip(char *line);
+char * stripOneWord(char *line);
 int execute(char **args);
 void log_error(char *message);
 static void sighandler(int sig);
