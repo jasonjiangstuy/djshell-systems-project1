@@ -88,7 +88,7 @@ int execute(char **args) {
 }
 
 char * stripOneWord(char *line) {
-    
+
     char *ptr = line;
     char * newline = calloc(strlen(line), 1);
     int nlcounter = 0;
@@ -153,7 +153,21 @@ int launch_shell() {
             tmp[strlen(tmp) - 1] = '\0';
             if (isspace(tmp[0])) {
                 tmp++;
-            } 
+            }
+            char * currentCommand = temp;
+            int counter;
+            for (counter = 0; counter < strlen(temp); i ++){
+              if (temp[counter] == "|"){
+                // found pipe, end of command, send this to stdin
+                temp[counter] = '\0';
+              }else if(temp[counter] == ">"){
+                // found redirect end of command, send this the file name coming up till the end of the line
+                temp[counter] = '\0'
+              }else{
+                break;
+              }
+            }
+            // function run ( args , send to which fd table)
             char **args = parse_args(tmp);
             int status = execute(args);
             if (status != 0) {
