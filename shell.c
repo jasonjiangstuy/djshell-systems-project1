@@ -164,10 +164,12 @@ int launch_shell() {
             }
             char * currentCommand = tmp;
             int counter;
+            // printf("%s\n", currentCommand);
             for (counter = 0; counter < strlen(tmp); counter++){
+              // printf("%c\n", tmp[counter]);
               if (tmp[counter] == '|'){
                 tmp[counter] = '\0';
-                printf("%s | \n", currentCommand[0]);
+                printf("%s | \n", currentCommand);
                 // found pipe, end of command, send this to stdin
                 // char **args = parse_args(currentCommand);
                 // int status = execute(args, 0);
@@ -177,7 +179,8 @@ int launch_shell() {
                 // }
 
                 currentCommand = tmp + counter + 1;
-              }else if(tmp[counter] == '>'){
+              }
+              else if(tmp[counter] == '>'){
                 tmp[counter] = '\0';
                 printf("%s > %s\n", currentCommand[0], currentCommand[1]);
                 // // found redirect end of command, send this the file name coming up till the end of the line
@@ -194,7 +197,7 @@ int launch_shell() {
               }
             }
             if (currentCommand[0] != '\0'){
-              printf("%s\n", currentCommand[0]);
+              printf("%s\n", currentCommand);
               // if there is one command left
               // char **args = parse_args(currentCommand);
               // int status = execute(args, fd);
