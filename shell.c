@@ -30,6 +30,7 @@ static void sighandler(int sig) {
 
 // basic parsing for argument vector
 char ** parse_args(char *line) {
+    line = strip(line);
     int i;
     int counter = 2;
     for (i = 0; i < strlen(line); i++) {
@@ -50,7 +51,9 @@ char ** parse_args(char *line) {
     }
 
     while ((tmp = strsep(&line, " "))) {
-        arr[counter] = stripOneWord(tmp);
+        arr[counter] = strip(tmp);
+
+        // printf("arr[counter] %s\n", arr[counter]);
         counter++;
     }
 
@@ -94,39 +97,38 @@ int execute(char **args, int fd) {
         return 0;
     }
 }
-
-char * stripOneWord(char *line) {
-
-    char *ptr = line;
-    char * newline = calloc(strlen(line), 1);
-    int nlcounter = 0;
-    int i;
-    for (i = 0; i < strlen(line); i++) {
-        if (!isspace(line[i])) {
+// input make it calloc
+char * strip(char *line) {
+    // printf("%s\n", line);
+    char * ptr = calloc(strlen(line), sizeof(char));
+    strcpy(ptr, line);
+    for (; ptr[0]!= '\0'; ptr++) {
+        if (!isspace(ptr[0])) {
           break;
+        }else{
+          ptr[0] = '\0';
         }
     }
-    // save to another char array
-    for (; i< strlen(line); i++){
-      // disregard everything after white space
-      if (isspace(line[i])) {
+    int i;
+    for (i = strlen(ptr) - 1; i >= 0; i --){
+      if (!isspace(ptr[i])) {
         break;
+      }else{
+        ptr[i] = '\0';
       }
-      newline[nlcounter] = line[i];
-      nlcounter++;
     }
-
-
-    // // char *end = ptr + strlen(ptr) - 1;
-    // for ( ; end != ptr - 1; end--) {
-    //     if (!isspace(*end)) {
-    //         break;
-    //     }
-    //     *end = '\0';
-    // }
-    return newline;
+    return ptr;
 }
 
+int run(char * currentCommand, int fd){
+  char **args = parse_args(currentCommand);
+  int status = execute(args, fd);
+  if (status != 0) {
+      printf("%s\n", strerror(errno));
+      log_error(strerror(errno));
+  }
+
+}
 // main launch loop
 int launch_shell() {
 
@@ -164,47 +166,44 @@ int launch_shell() {
             }
             char * currentCommand = tmp;
             int counter;
-            // printf("%s\n", currentCommand);
+            // printf("%s\n", t);
             for (counter = 0; counter < strlen(tmp); counter++){
               // printf("%c\n", tmp[counter]);
               if (tmp[counter] == '|'){
                 tmp[counter] = '\0';
-                printf("%s | \n", currentCommand);
+                // printf("TMP:%s\n", tmp);
                 // found pipe, end of command, send this to stdin
-                // char **args = parse_args(currentCommand);
-                // int status = execute(args, 0);
-                // if (status != 0) {
-                //     printf("%s\n", strerror(errno));
-                //     log_error(strerror(errno));
-                // }
+                // printf("%d\n", strlen(currentCommand));
+                // printf("%s\n", args[0]);
+                run(currentCommand, 1);
 
                 currentCommand = tmp + counter + 1;
               }
               else if(tmp[counter] == '>'){
-                tmp[counter] = '\0';
-                printf("%s > %s\n", currentCommand[0], currentCommand[1]);
-                // // found redirect end of command, send this the file name coming up till the end of the line
-                // int fd = open(temp[counter + 1], O_CREAT | O_WRONLY, 0777);
-                // // redirect things to stdout to fd
-                // char **args = parse_args(currentCommand);
-                // int status = execute(args, fd);
-                // if (status != 0) {
-                //     printf("%s\n", strerror(errno));
-                //     log_error(strerror(errno));
-                // }
-                currentCommand = '\0';
+                  tmp[counter] = '\0';
+                if (tmp[counter + 1] == '>'){
+                  // open with appending
+                  int fd = open(strip(tmp + counter + 2), O_CREAT | O_WRONLY | O_APPEND, 0777);
+                  run(currentCommand, fd);
+
+                }else{
+                  // printf("%s > %s\n", currentCommand[0], currentCommand[1]);
+                  // found redirect end of command, send this the file name coming up till the end of the line
+                  int fd = open(strip(tmp + counter + 1), O_CREAT | O_WRONLY| O_TRUNC, 0777);
+                  // redirect things to stdout to fd
+                  run(currentCommand, fd);
+
+                  currentCommand = '\0';
+
+                }
                 break;
               }
             }
             if (currentCommand[0] != '\0'){
-              printf("%s\n", currentCommand);
+              // printf("%s\n", currentCommand);
               // if there is one command left
-              // char **args = parse_args(currentCommand);
-              // int status = execute(args, fd);
-              // if (status != 0) {
-              //     printf("%s\n", strerror(errno));
-              //     log_error(strerror(errno));
-              // }
+              int fd = 1;
+              run(currentCommand, fd);
 
             }
 
