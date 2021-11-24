@@ -1,4 +1,5 @@
 // Used for main shell functionality
+#include <unistd.h>
 
 // FIXES: MOVE TO NEW FILES; PARSE ON ;
 #include "shell.h"
@@ -57,7 +58,7 @@ char ** parse_args(char *line) {
 
 }
 
-int execute(char **args) {
+int execute(char **args, int fd) {
     if (strcmp(args[0], "exit") == 0) {
         exit(0);
     }
@@ -72,6 +73,7 @@ int execute(char **args) {
     if (f) {
         int status;
         wait(&status);
+        // fd_max do i have to redirect back?13428709
         int return_val = WEXITSTATUS(status);
         if (return_val) {
             return -1;
@@ -79,6 +81,12 @@ int execute(char **args) {
         return 0;
     }
     else {
+        if (fd != 1){
+          // its not stdout
+          dup(1); // clone stdout
+          dup2(fd, 1);
+          // redirect that file, to stdout
+        }
         int status = execvp(args[0], args);
         if (status == -1) {
             return errno;
@@ -154,26 +162,49 @@ int launch_shell() {
             if (isspace(tmp[0])) {
                 tmp++;
             }
-            char * currentCommand = temp;
+            char * currentCommand = tmp;
             int counter;
-            for (counter = 0; counter < strlen(temp); i ++){
-              if (temp[counter] == "|"){
+            for (counter = 0; counter < strlen(tmp); counter++){
+              if (tmp[counter] == '|'){
+                tmp[counter] = '\0';
+                printf("%s | \n", currentCommand[0]);
                 // found pipe, end of command, send this to stdin
-                temp[counter] = '\0';
-              }else if(temp[counter] == ">"){
-                // found redirect end of command, send this the file name coming up till the end of the line
-                temp[counter] = '\0'
-              }else{
+                // char **args = parse_args(currentCommand);
+                // int status = execute(args, 0);
+                // if (status != 0) {
+                //     printf("%s\n", strerror(errno));
+                //     log_error(strerror(errno));
+                // }
+
+                currentCommand = tmp + counter + 1;
+              }else if(tmp[counter] == '>'){
+                tmp[counter] = '\0';
+                printf("%s > %s\n", currentCommand[0], currentCommand[1]);
+                // // found redirect end of command, send this the file name coming up till the end of the line
+                // int fd = open(temp[counter + 1], O_CREAT | O_WRONLY, 0777);
+                // // redirect things to stdout to fd
+                // char **args = parse_args(currentCommand);
+                // int status = execute(args, fd);
+                // if (status != 0) {
+                //     printf("%s\n", strerror(errno));
+                //     log_error(strerror(errno));
+                // }
+                currentCommand = '\0';
                 break;
               }
             }
-            // function run ( args , send to which fd table)
-            char **args = parse_args(tmp);
-            int status = execute(args);
-            if (status != 0) {
-                printf("%s\n", strerror(errno));
-                log_error(strerror(errno));
+            if (currentCommand[0] != '\0'){
+              printf("%s\n", currentCommand[0]);
+              // if there is one command left
+              // char **args = parse_args(currentCommand);
+              // int status = execute(args, fd);
+              // if (status != 0) {
+              //     printf("%s\n", strerror(errno));
+              //     log_error(strerror(errno));
+              // }
+
             }
+
         }
 
     }
