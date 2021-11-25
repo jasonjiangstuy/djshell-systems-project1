@@ -22,8 +22,8 @@
 
 // custom functions
 int launch_shell();
-char * stripOneWord(char *line);
-int execute(char **args);
+char * strip(char *line);
+int execute(char **args, int fd);
 void log_error(char *message);
 static void sighandler(int sig);
 char **parse_args( char *line );
