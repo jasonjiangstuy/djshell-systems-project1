@@ -20,6 +20,7 @@ void log_error(char *message) {
 // signal handler POSSIBLY REMOVE TO SEPARATE FILE
 static void sighandler(int sig) {
     if (sig == SIGINT) {
+        printf("Exiting Shell\n");
         exit(0);
     }
     if (sig == SIGSEGV) {
@@ -128,6 +129,8 @@ int run(char * currentCommand, int fd){
       log_error(strerror(errno));
   }
 
+  return 0;
+
 }
 // main launch loop
 int launch_shell() {
@@ -180,22 +183,21 @@ int launch_shell() {
                 currentCommand = tmp + counter + 1;
               }
               else if(tmp[counter] == '>'){
-                  tmp[counter] = '\0';
+                tmp[counter] = '\0';
                 if (tmp[counter + 1] == '>'){
                   // open with appending
                   int fd = open(strip(tmp + counter + 2), O_CREAT | O_WRONLY | O_APPEND, 0777);
                   run(currentCommand, fd);
 
-                }else{
+                } else{
                   // printf("%s > %s\n", currentCommand[0], currentCommand[1]);
                   // found redirect end of command, send this the file name coming up till the end of the line
                   int fd = open(strip(tmp + counter + 1), O_CREAT | O_WRONLY| O_TRUNC, 0777);
                   // redirect things to stdout to fd
                   run(currentCommand, fd);
 
-                  currentCommand = '\0';
-
                 }
+                *currentCommand = '\0';
                 break;
               }
             }
