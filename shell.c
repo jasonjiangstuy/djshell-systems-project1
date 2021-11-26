@@ -85,7 +85,7 @@ int execute(char **args, int fd) {
     }
     else {
         if (fd != 1){
-          dup(STDOUT_FILENO); 
+          dup(STDOUT_FILENO);
           dup2(fd, STDOUT_FILENO);
         }
         int status = execvp(args[0], args);
@@ -107,7 +107,7 @@ int execute_rein(char * currentCommand, int fd) {
             return -1;
         }
         return 0;
-    } 
+    }
     else {
         int backup = dup(STDIN_FILENO);
         dup2(fd, STDIN_FILENO);
@@ -219,14 +219,14 @@ int launch_shell() {
                     tmp[counter] = '\0';
                     FILE *in = popen(currentCommand, "r");
                     currentCommand = tmp + counter + 1;
-                    execute_pipe(currentCommand, in);
+                      execute_pipe(currentCommand, in);
                 }
                 else if (tmp[counter] == '>') {
                     tmp[counter] = '\0';
                     if (tmp[counter + 1] == '>') {
                         int fd = open(strip(tmp + counter + 2), O_CREAT | O_WRONLY | O_APPEND, 0777);
                         run(currentCommand, fd);
-                    } 
+                    }
                     else {
                         int fd = open(strip(tmp + counter + 1), O_CREAT | O_WRONLY| O_TRUNC, 0777);
                         run(currentCommand, fd);
