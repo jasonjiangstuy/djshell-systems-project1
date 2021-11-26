@@ -20,7 +20,7 @@ void log_error(char *message) {
 // signal handler POSSIBLY REMOVE TO SEPARATE FILE
 static void sighandler(int sig) {
     if (sig == SIGINT) {
-        printf("Exiting Shell\n");
+        printf("\nExiting Shell\n");
         exit(0);
     }
     if (sig == SIGSEGV) {
@@ -77,7 +77,6 @@ int execute(char **args, int fd) {
     if (f) {
         int status;
         wait(&status);
-        // fd_max do i have to redirect back?13428709
         int return_val = WEXITSTATUS(status);
         if (return_val) {
             return -1;
@@ -86,10 +85,8 @@ int execute(char **args, int fd) {
     }
     else {
         if (fd != 1){
-          // its not stdout
-          dup(1); // clone stdout
-          dup2(fd, 1);
-          // redirect that file, to stdout
+          dup(STDOUT_FILENO); 
+          dup2(fd, STDOUT_FILENO);
         }
         int status = execvp(args[0], args);
         if (status == -1) {
@@ -98,6 +95,56 @@ int execute(char **args, int fd) {
         return 0;
     }
 }
+
+int execute_rein(char * currentCommand, int fd) {
+    char **args = parse_args(currentCommand);
+    int f = fork();
+    if (f) {
+        int status;
+        wait(&status);
+        int return_val = WEXITSTATUS(status);
+        if (return_val) {
+            return -1;
+        }
+        return 0;
+    } 
+    else {
+        int backup = dup(STDIN_FILENO);
+        dup2(fd, STDIN_FILENO);
+        int status = execvp(args[0], args);
+        if (status == -1) {
+            return errno;
+        }
+        dup2(backup, STDIN_FILENO);
+        return 0;
+    }
+}
+
+int execute_pipe(char *currentCommand, FILE *in) {
+    int fd = fileno(in);
+    char **args = parse_args(currentCommand);
+    int f = fork();
+    if (f) {
+        int status;
+        wait(&status);
+        int return_val = WEXITSTATUS(status);
+        if (return_val) {
+            return -1;
+        }
+        return 0;
+    }
+    else {
+        int backup = dup(STDIN_FILENO);
+        dup2(fd, STDIN_FILENO);
+        int status = execvp(args[0], args);
+        if (status == -1) {
+            return errno;
+        }
+        dup2(backup, STDIN_FILENO);
+        return 0;
+    }
+}
+
 // input make it calloc
 char * strip(char *line) {
     // printf("%s\n", line);
@@ -122,16 +169,14 @@ char * strip(char *line) {
 }
 
 int run(char * currentCommand, int fd){
-  char **args = parse_args(currentCommand);
-  int status = execute(args, fd);
-  if (status != 0) {
-      printf("%s\n", strerror(errno));
-      log_error(strerror(errno));
-  }
-
-  return 0;
-
+    char **args = parse_args(currentCommand);
+    int status = execute(args, fd);
+    if (status != 0) {
+        log_error(strerror(errno));
+    }
+    return 0;
 }
+
 // main launch loop
 int launch_shell() {
 
@@ -169,50 +214,36 @@ int launch_shell() {
             }
             char * currentCommand = tmp;
             int counter;
-            // printf("%s\n", t);
-            for (counter = 0; counter < strlen(tmp); counter++){
-              // printf("%c\n", tmp[counter]);
-              if (tmp[counter] == '|'){
-                tmp[counter] = '\0';
-                // printf("TMP:%s\n", tmp);
-                // found pipe, end of command, send this to stdin
-                // printf("%d\n", strlen(currentCommand));
-                // printf("%s\n", args[0]);
-                run(currentCommand, 1);
-
-                currentCommand = tmp + counter + 1;
-              }
-              else if(tmp[counter] == '>'){
-                tmp[counter] = '\0';
-                if (tmp[counter + 1] == '>'){
-                  // open with appending
-                  int fd = open(strip(tmp + counter + 2), O_CREAT | O_WRONLY | O_APPEND, 0777);
-                  run(currentCommand, fd);
-
-                } else{
-                  // printf("%s > %s\n", currentCommand[0], currentCommand[1]);
-                  // found redirect end of command, send this the file name coming up till the end of the line
-                  int fd = open(strip(tmp + counter + 1), O_CREAT | O_WRONLY| O_TRUNC, 0777);
-                  // redirect things to stdout to fd
-                  run(currentCommand, fd);
-
+            for (counter = 0; counter < strlen(tmp); counter++) {
+                if (tmp[counter] == '|') {
+                    tmp[counter] = '\0';
+                    FILE *in = popen(currentCommand, "r");
+                    currentCommand = tmp + counter + 1;
+                    execute_pipe(currentCommand, in);
                 }
-                *currentCommand = '\0';
-                break;
-              }
+                else if (tmp[counter] == '>') {
+                    tmp[counter] = '\0';
+                    if (tmp[counter + 1] == '>') {
+                        int fd = open(strip(tmp + counter + 2), O_CREAT | O_WRONLY | O_APPEND, 0777);
+                        run(currentCommand, fd);
+                    } 
+                    else {
+                        int fd = open(strip(tmp + counter + 1), O_CREAT | O_WRONLY| O_TRUNC, 0777);
+                        run(currentCommand, fd);
+                    }
+                    *currentCommand = '\0';
+                }
+                else if (tmp[counter] == '<') {
+                    tmp[counter] = '\0';
+                    int fd = open(strip(tmp + counter + 1), O_RDONLY);
+                    execute_rein(currentCommand, fd);
+                }
             }
-            if (currentCommand[0] != '\0'){
-              // printf("%s\n", currentCommand);
-              // if there is one command left
-              int fd = 1;
-              run(currentCommand, fd);
-
+            if (currentCommand[0] != '\0') {
+                int fd = 1;
+                run(currentCommand, fd);
             }
-
         }
-
     }
-
     return 0;
-
 }
