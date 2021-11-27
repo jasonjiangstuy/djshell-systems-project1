@@ -62,7 +62,7 @@ char ** parse_args(char *line) {
 
 }
 
-int execute(char **args, int fd) {
+int execute(char **args) {
     if (strcmp(args[0], "exit") == 0) {
         exit(0);
     }
@@ -84,10 +84,6 @@ int execute(char **args, int fd) {
         return 0;
     }
     else {
-        if (fd != 1){
-          dup(STDOUT_FILENO);
-          dup2(fd, STDOUT_FILENO);
-        }
         int status = execvp(args[0], args);
         if (status == -1) {
             return errno;
@@ -120,7 +116,9 @@ int execute_rein(char * currentCommand, int fd) {
     }
 }
 
-int execute_pipe(char *src, char *dest) {
+int execute_pipe(char *src) {
+    FILE * in = popen(src, "w");
+    dup2(fileno(in), STDOUT_FILENO);
     int f = fork();
     if (f) {
         int status;
@@ -168,9 +166,9 @@ char * strip(char *line) {
     return ptr;
 }
 
-int run(char * currentCommand, int fd){
+int run(char * currentCommand){
     char **args = parse_args(currentCommand);
-    int status = execute(args, fd);
+    int status = execute(args);
     if (status != 0) {
         log_error(strerror(errno));
     }
@@ -201,48 +199,67 @@ int launch_shell() {
         char *path = strrchr(tmp_path, '/');
 
         printf("%s djshell $ ", path);
-        char *buffer = calloc(CHARMAX, sizeof(char)); // fix sizing?
-        fgets(buffer, CHARMAX, stdin);
-
+        char *buffer = calloc(CHARMAX + 1, sizeof(char)); // fix sizing?
+        fgets(buffer + 1, CHARMAX, stdin);
+// + 1 to leave a null at the start of char array
         write(file, buffer, strlen(buffer));
 
         char *tmp;
         while ((tmp = strsep(&buffer, ";"))) {
+            int backupOUT = dup(STDOUT_FILENO);
+            int backupIN = dup(STDIN_FILENO);
+
             tmp[strlen(tmp) - 1] = '\0';
-            if (isspace(tmp[0])) {
-                tmp++;
+            // tmp is a single Command
+            tmp = strip(tmp);
+            int size = strlen(tmp);
+            if (size == 0){
+              break;
             }
-            char * currentCommand = tmp;
-            int counter;
-            for (counter = 0; counter < strlen(tmp); counter++) {
-                if (tmp[counter] == '|') {
-                    tmp[counter] = '\0';
-                    execute_pipe(currentCommand, strip(tmp+counter+1));
-                    *currentCommand = '\0';
-                }
-                else if (tmp[counter] == '>') {
-                    tmp[counter] = '\0';
-                    if (tmp[counter + 1] == '>') {
-                        int fd = open(strip(tmp + counter + 2), O_CREAT | O_WRONLY | O_APPEND, 0777);
-                        run(currentCommand, fd);
-                    }
-                    else {
-                        int fd = open(strip(tmp + counter + 1), O_CREAT | O_WRONLY| O_TRUNC, 0777);
-                        run(currentCommand, fd);
-                    }
-                    *currentCommand = '\0';
-                }
-                else if (tmp[counter] == '<') {
-                    tmp[counter] = '\0';
-                    int fd = open(strip(tmp + counter + 1), O_RDONLY);
-                    execute_rein(currentCommand, fd);
-                    *currentCommand = '\0';
-                }
+            char * currentCommand;
+            // iterate backwards
+            for (counter = 0; 1 ; counter ++){
+              int currentIndex = size - 1 - counter;
+              switch (tmp[currentIndex]) {
+                case '|':
+                  currentCommand = tmp + currentIndex + 1;
+                  tmp[currentIndex] = '\0';
+                  execute_pipe(currentCommand);
+                  break;
+                case '>':
+                  tmp[currentIndex] = '\0';
+                  if (tmp[currentIndex - 1] == '>') {
+                      counter ++;
+                      tmp[currentIndex - 1] = '\0';
+                      currentCommand = currentIndex + 1;
+                      int fd = open(strip(currentCommand), O_CREAT | O_WRONLY | O_APPEND, 0777);
+                      dup2(fd, STDOUT_FILENO);
+                  }
+                  else {
+                    // redirect to file, overwriting
+                      currentCommand = currentIndex + 1;
+                      int fd = open(strip(currentCommand), O_CREAT | O_WRONLY| O_TRUNC, 0777);
+                      dup2(fd, STDOUT_FILENO);
+                  }
+                  break;
+                case '<':
+                // taking in a file for input
+                  tmp[currentIndex] = '\0';
+                  // now tmp is the file name
+                  int fd = open(strip(tmp), O_RDONLY);
+                  execute_rein(currentCommand, fd);
+                  // stop the program;
+                  counter ++;
+                  break
+                case '\0':
+                // reached end of command
+                currentCommand = currentIndex + 1;
+                run(currentCommand);
+              }
             }
-            if (currentCommand[0] != '\0') {
-                int fd = 1;
-                run(currentCommand, fd);
-            }
+            dup2(backupOUT, STDOUT_FILENO);
+            dup2(backupIN, STDIN_FILENO);
+
         }
     }
     return 0;

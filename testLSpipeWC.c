@@ -19,7 +19,7 @@ int main(int argc, char const *argv[]) {
   FILE * in = popen("wc", "w");
     // set the input file descripter to be file descripter 1
   // MAKE LS OUTPUT TO WC's INPUT
-  dup(1); 
+  dup(1);
   dup2(fileno(in), 1);
 
   // current file table
