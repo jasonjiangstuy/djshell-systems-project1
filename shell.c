@@ -123,16 +123,28 @@ int execute_rein(char * currentCommand, int fd) {
 }
 
 int execute_pipe(char *src, char *dest) {
-    int backup = dup(STDOUT_FILENO);
-    FILE *in = popen(dest, "w");
-    dup2(fileno(in), STDOUT_FILENO);
-    char **args = parse_args(src);
-    int status = execvp(args[0], args);
-    if (status == 1) {
-        return errno;
+    int f = fork();
+    if (f) {
+        int status;
+        wait(&status);
+        int return_val = WEXITSTATUS(status);
+        if (return_val) {
+            return -1;
+        }
+        return 0;
     }
-    dup2(backup, STDOUT_FILENO);
-    return 0;
+    else {
+        FILE *in = popen(dest, "w");
+        int backup = dup(STDOUT_FILENO);
+        dup2(fileno(in), STDOUT_FILENO);
+        char **args = parse_args(src);
+        int status = execvp(args[0], args);
+        if (status == 1) {
+            return errno;
+        }
+        dup2(backup, STDOUT_FILENO);
+        return 0;
+    } 
 }
 
 // input make it calloc
