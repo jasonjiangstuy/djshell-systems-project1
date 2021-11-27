@@ -40,6 +40,7 @@ char ** parse_args(char *line) {
         }
     }
     char **arr = calloc(counter, sizeof(char *));
+    //arr[counter-1] = "\0";
 
     char *tmp;
 
@@ -52,6 +53,7 @@ char ** parse_args(char *line) {
     }
 
     while ((tmp = strsep(&line, " "))) {
+        // printf("%s\n", tmp);
         arr[counter] = strip(tmp);
 
         // printf("arr[counter] %s\n", arr[counter]);
@@ -84,15 +86,18 @@ int execute(char **args, int fd) {
         return 0;
     }
     else {
+        int backup;
         if (fd != 1){
-          dup(STDOUT_FILENO);
+          backup = dup(STDOUT_FILENO);
           dup2(fd, STDOUT_FILENO);
         }
         int status = execvp(args[0], args);
         if (status == -1) {
-            printf("No such file or directory\n");
-            exit(0);
+            printf("Error: %s\n", strerror(errno));
             return errno;
+        }
+        if (fd != 1) {
+            dup2(backup, STDOUT_FILENO);
         }
         return 0;
     }
@@ -157,7 +162,7 @@ int execute_pipe(char *src, char *dest) {
 
 // input make it calloc
 char * strip(char *line) {
-    // printf("%s\n", line);
+    //printf("%s\n", line);
     char * ptr = calloc(strlen(line), sizeof(char));
     strcpy(ptr, line);
     for (; ptr[0]!= '\0'; ptr++) {
@@ -175,6 +180,7 @@ char * strip(char *line) {
         ptr[i] = '\0';
       }
     }
+    //printf("%s\n", ptr);
     return ptr;
 }
 
