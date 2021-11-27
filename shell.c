@@ -120,9 +120,7 @@ int execute_rein(char * currentCommand, int fd) {
     }
 }
 
-int execute_pipe(char *currentCommand, FILE *in) {
-    int fd = fileno(in);
-    char **args = parse_args(currentCommand);
+int execute_pipe(char *src, char *dest) {
     int f = fork();
     if (f) {
         int status;
@@ -134,13 +132,15 @@ int execute_pipe(char *currentCommand, FILE *in) {
         return 0;
     }
     else {
-        int backup = dup(STDIN_FILENO);
-        dup2(fd, STDIN_FILENO);
+        FILE *in = popen(dest, "w");
+        int backup = dup(STDOUT_FILENO);
+        dup2(fileno(in), STDOUT_FILENO);
+        char **args = parse_args(src);
         int status = execvp(args[0], args);
-        if (status == -1) {
+        if (status == 1) {
             return errno;
         }
-        dup2(backup, STDIN_FILENO);
+        //dup2(backup, STDOUT_FILENO);
         return 0;
     }
 }
@@ -217,9 +217,8 @@ int launch_shell() {
             for (counter = 0; counter < strlen(tmp); counter++) {
                 if (tmp[counter] == '|') {
                     tmp[counter] = '\0';
-                    FILE *in = popen(currentCommand, "r");
-                    currentCommand = tmp + counter + 1;
-                      execute_pipe(currentCommand, in);
+                    execute_pipe(currentCommand, strip(tmp+counter+1));
+                    *currentCommand = '\0';
                 }
                 else if (tmp[counter] == '>') {
                     tmp[counter] = '\0';
@@ -237,6 +236,7 @@ int launch_shell() {
                     tmp[counter] = '\0';
                     int fd = open(strip(tmp + counter + 1), O_RDONLY);
                     execute_rein(currentCommand, fd);
+                    *currentCommand = '\0';
                 }
             }
             if (currentCommand[0] != '\0') {
