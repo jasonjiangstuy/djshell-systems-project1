@@ -117,30 +117,10 @@ int execute_rein(char * currentCommand, int fd) {
 }
 
 int execute_pipe(char *src) {
+    printf("%s ready to recieve\n", src);
     FILE * in = popen(src, "w");
     dup2(fileno(in), STDOUT_FILENO);
-    int f = fork();
-    if (f) {
-        int status;
-        wait(&status);
-        int return_val = WEXITSTATUS(status);
-        if (return_val) {
-            return -1;
-        }
-        return 0;
-    }
-    else {
-        int backup = dup(STDOUT_FILENO);
-        FILE *in = popen(dest, "w");
-        dup2(fileno(in), STDOUT_FILENO);
-        char **args = parse_args(src);
-        int status = execvp(args[0], args);
-        if (status == 1) {
-            return errno;
-        }
-        dup2(backup, STDOUT_FILENO);
-        return 0;
-    }
+    return 0;
 }
 
 // input make it calloc
@@ -167,6 +147,7 @@ char * strip(char *line) {
 }
 
 int run(char * currentCommand){
+    printf("running %s\n", currentCommand);
     char **args = parse_args(currentCommand);
     int status = execute(args);
     if (status != 0) {
@@ -197,19 +178,18 @@ int launch_shell() {
         char *tmp_path = calloc(CHARMAX, sizeof(char));
         getcwd(tmp_path, CHARMAX);
         char *path = strrchr(tmp_path, '/');
-
         printf("%s djshell $ ", path);
-        char *buffer = calloc(CHARMAX + 1, sizeof(char)); // fix sizing?
-        fgets(buffer + 1, CHARMAX, stdin);
+        char *buffer = calloc(CHARMAX, sizeof(char)); // fix sizing?
+        fgets(buffer + 1, CHARMAX -1, stdin);
 // + 1 to leave a null at the start of char array
         write(file, buffer, strlen(buffer));
 
         char *tmp;
         while ((tmp = strsep(&buffer, ";"))) {
+            tmp = tmp +1;
+            tmp[strlen(tmp) - 1] = '\0';
             int backupOUT = dup(STDOUT_FILENO);
             int backupIN = dup(STDIN_FILENO);
-
-            tmp[strlen(tmp) - 1] = '\0';
             // tmp is a single Command
             tmp = strip(tmp);
             int size = strlen(tmp);
@@ -218,26 +198,28 @@ int launch_shell() {
             }
             char * currentCommand;
             // iterate backwards
-            for (counter = 0; 1 ; counter ++){
+            int counter = 0;
+            int go = 1;
+            for (; go; counter ++){
               int currentIndex = size - 1 - counter;
               switch (tmp[currentIndex]) {
                 case '|':
                   currentCommand = tmp + currentIndex + 1;
                   tmp[currentIndex] = '\0';
-                  execute_pipe(currentCommand);
+                  execute_pipe(strip(currentCommand));
                   break;
                 case '>':
                   tmp[currentIndex] = '\0';
                   if (tmp[currentIndex - 1] == '>') {
                       counter ++;
                       tmp[currentIndex - 1] = '\0';
-                      currentCommand = currentIndex + 1;
+                      currentCommand = tmp+ currentIndex + 1;
                       int fd = open(strip(currentCommand), O_CREAT | O_WRONLY | O_APPEND, 0777);
                       dup2(fd, STDOUT_FILENO);
                   }
                   else {
                     // redirect to file, overwriting
-                      currentCommand = currentIndex + 1;
+                      currentCommand = tmp + currentIndex + 1;
                       int fd = open(strip(currentCommand), O_CREAT | O_WRONLY| O_TRUNC, 0777);
                       dup2(fd, STDOUT_FILENO);
                   }
@@ -246,16 +228,20 @@ int launch_shell() {
                 // taking in a file for input
                   tmp[currentIndex] = '\0';
                   // now tmp is the file name
+                  currentCommand = tmp + currentIndex + 1;
                   int fd = open(strip(tmp), O_RDONLY);
                   execute_rein(currentCommand, fd);
                   // stop the program;
                   counter ++;
-                  break
+                  break;
                 case '\0':
-                // reached end of command
-                currentCommand = currentIndex + 1;
-                run(currentCommand);
+                  // reached end of command
+                  currentCommand = tmp + currentIndex + 1;
+                  run(currentCommand);
+                  go = 0;
+                  break;
               }
+              printf("%s\n", "end");
             }
             dup2(backupOUT, STDOUT_FILENO);
             dup2(backupIN, STDIN_FILENO);
