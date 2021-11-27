@@ -90,6 +90,8 @@ int execute(char **args, int fd) {
         }
         int status = execvp(args[0], args);
         if (status == -1) {
+            printf("No such file or directory\n");
+            exit(0);
             return errno;
         }
         return 0;
