@@ -4,7 +4,9 @@
 #define PARSING "defined"
 
 // Function declarations
-char * strip(char *line); // Strips strings of trailing and leading whitespace
-char ** parse_args(char *line); // parsing for argument vector; breaks on spaces; adds trailing null for execvp
+// Strips strings of trailing and leading whitespace; takes a string; returns a string
+char * strip(char *line);
+// parsing for argument vector; breaks on spaces; adds trailing null for execvp; takes a string; returns an array of strings
+char ** parse_args(char *line);
 
 #endif

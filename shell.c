@@ -5,7 +5,7 @@
 #include "parsing.h"
 #include "includes.h"
 
-// Logs errors and events to errorlog
+// Logs errors and events to errorlog; takes error message; returns void
 void log_error(char *message) {
     printf("Error: %s\n", message); // prints all errors --> errors don't cause crashing
     int file = open("error_log.txt", O_CREAT | O_WRONLY | O_APPEND); // opens an error_log
@@ -19,7 +19,7 @@ void log_error(char *message) {
     w = write(file, "\n", 1); // adds newline character after 
 }
 
-// signal handler
+// signal handler; takes int signal; no return, always exits
 static void sighandler(int sig) {
     if (sig == SIGINT) {
         printf("\nExiting Shell\n"); // exits shell gracefully on ^C
@@ -31,7 +31,7 @@ static void sighandler(int sig) {
     }
 }
 
-// main launch loop
+// main launch loop; takes no args; returns an int (should always return 0)
 int launch_shell() {
 
     printf("Launching shell\n");

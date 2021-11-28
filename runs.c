@@ -5,7 +5,7 @@
 #include "parsing.h"
 #include "includes.h"
 
-// executes all commands except for piping
+// executes all commands except for piping; takes an array of strings, the file descriptor to reidrect to, and file descriptor of either stdin or stdout; returns an int status
 int execute(char **args, int fd, int dest) {
     if (strcmp(args[0], "exit") == 0) { // if exit, exit
         exit(0);
@@ -44,7 +44,7 @@ int execute(char **args, int fd, int dest) {
     }
 }
 
-// executes piping commands
+// executes piping commands; takes 2 args, second to pipe first output into; returns int status
 int execute_pipe(char *src, char *dest) { // src is first arg to run, dest is where to pipe
     // opens a filestream for the dest using popen
     FILE *in = popen(dest, "w");
@@ -75,7 +75,7 @@ int execute_pipe(char *src, char *dest) { // src is first arg to run, dest is wh
     }
 }
 
-// driver for executing commands; parses/preprocesses
+// driver for executing commands; parses/preprocesses; takes string line from shell, file descriptor to redirect to, and whether to use stdin or stdout; returns int status
 int run(char *currentCommand, int fd, int dest) {
     char **args = parse_args(currentCommand); // parses args
     int status = execute(args, fd, dest); // executes

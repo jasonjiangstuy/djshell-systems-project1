@@ -3,7 +3,7 @@
 // includes
 #include "includes.h"
 
-// Strips strings of trailing and leading whitespace
+// Strips strings of trailing and leading whitespace; takes a string; returns a string
 char * strip(char *line) {
 
     // creates a modifiable copy of line
@@ -32,7 +32,7 @@ char * strip(char *line) {
     return ptr;
 }
 
-// parsing for argument vector; breaks on spaces; adds trailing null for execvp
+// parsing for argument vector; breaks on spaces; adds trailing null for execvp; takes a string; returns an array of strings
 char ** parse_args(char *line) {
 
     line = strip(line);
