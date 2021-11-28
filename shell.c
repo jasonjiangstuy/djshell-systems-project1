@@ -89,6 +89,7 @@ int launch_shell() {
                     // sets currentcommand[0] to null so there is nothing left in the string to parse
                     *currentCommand = '\0';
                 }
+                // for n>
                 else if (isdigit(tmp[counter]) && tmp[counter+1] == '>') {
                     int x = atoi(&tmp[counter]);
                     tmp[counter] = '\0';
@@ -100,6 +101,19 @@ int launch_shell() {
                         fd = open(strip(tmp + counter + 2), O_CREAT | O_WRONLY | O_TRUNC, 0777);
                     }
                     run(currentCommand, fd, x);
+                    *currentCommand = '\0';
+                }
+                // for &>: redirecting stdout and stderror
+                else if (tmp[counter] == '&' && tmp[counter+1] == '>') {
+                    tmp[counter] = '\0';
+                    int fd;
+                    if (tmp[counter + 2] == '>') {
+                        fd = open(strip(tmp + counter + 3), O_CREAT | O_WRONLY | O_APPEND, 0777);
+                    }
+                    else {
+                        fd = open(strip(tmp + counter + 2), O_CREAT | O_WRONLY | O_TRUNC, 0777);
+                    }
+                    run(currentCommand, fd, -2);
                     *currentCommand = '\0';
                 }
                 else if (tmp[counter] == '>') {

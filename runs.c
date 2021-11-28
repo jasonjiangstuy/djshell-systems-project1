@@ -28,17 +28,21 @@ int execute(char **args, int fd, int dest) {
         return 0;
     }
     else {
-        int backup;
         if (fd != -1) { // if using redirection, redirects output
-            backup = dup(dest);
-            dup2(fd, dest);
+            if (dest == -2) { // -2 for dest signifies &>
+                dup(STDERR_FILENO);
+                dup(STDOUT_FILENO);
+                dup2(fd, STDERR_FILENO);
+                dup2(fd, STDOUT_FILENO);
+            }
+            else {
+                dup(dest);
+                dup2(fd, dest);
+            }
         }
         int status = execvp(args[0], args);
         if (status == -1) {
             return errno;
-        }
-        if (fd != -1) {
-            dup2(backup, dest);
         }
         return 0;
     }
