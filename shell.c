@@ -119,15 +119,38 @@ int launch_shell() {
                 else if (tmp[counter] == '>') {
                     tmp[counter] = '\0';
                     int fd;
+                    int x = STDOUT_FILENO;
+                    // checks for >n
+                    if (isdigit(tmp[counter + 1])) {
+                        x = atoi(&tmp[counter + 1]);
+                        fd = open(strip(tmp + counter + 2), O_CREAT | O_WRONLY | O_TRUNC, 0777);
+                    }
+                    // checks for >&
+                    else if (tmp[counter + 1] == '&') {
+                        x = -2;
+                        fd = open(strip(tmp + counter + 2), O_CREAT | O_WRONLY | O_TRUNC, 0777);
+                    }
                     // if >>, sets for append
-                    if (tmp[counter + 1] == '>') {
-                        fd = open(strip(tmp + counter + 2), O_CREAT | O_WRONLY | O_APPEND, 0777);
+                    else if (tmp[counter + 1] == '>') {
+                        // checls for >>n
+                        if (isdigit(tmp[counter + 2])) {
+                            x = atoi(&tmp[counter + 2]);
+                            fd = open(strip(tmp + counter + 3), O_CREAT | O_WRONLY | O_APPEND, 0777);
+                        }
+                        // checks for >>&
+                        else if (tmp[counter + 2] == '&') {
+                            x = -2;
+                            fd = open(strip(tmp + counter + 3), O_CREAT | O_WRONLY | O_APPEND, 0777);
+                        }
+                        else {
+                            fd = open(strip(tmp + counter + 2), O_CREAT | O_WRONLY | O_APPEND, 0777);
+                        }
                     }
                     // else sets to writing (overwrite)
                     else {
                         fd = open(strip(tmp + counter + 1), O_CREAT | O_WRONLY| O_TRUNC, 0777);
                     }
-                    run(currentCommand, fd, STDOUT_FILENO);
+                    run(currentCommand, fd, x);
                     *currentCommand = '\0';
                 }
                 else if (tmp[counter] == '<') {
