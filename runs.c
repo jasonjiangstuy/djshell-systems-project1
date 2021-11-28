@@ -42,7 +42,8 @@ int execute(char **args, int fd, int dest) {
         }
         int status = execvp(args[0], args);
         if (status == -1) {
-            return errno;
+            log_error(strerror(errno));
+            exit(0);
         }
         return 0;
     }
