@@ -3,6 +3,7 @@
 ## Implemented Features
 - Piping: Shell can pipe an indefinite number of commands
 - Redirection: >, >>, and < all work
+    - command n> file will redirect file descriptor n to file
     - Please only use one of the three per prompt
     - < should only be used on its own
 - Allows combining indefinitely many pipes followed by > or >>
