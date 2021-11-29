@@ -4,7 +4,8 @@
 #include "runs.h"
 #include "parsing.h"
 #include "includes.h"
-
+#include <unistd.h>
+#include <termios.h>
 // Logs errors and events to errorlog; takes error message; returns void
 void log_error(char *message) {
     printf("Error: %s\n", message); // prints all errors --> errors don't cause crashing
@@ -16,7 +17,7 @@ void log_error(char *message) {
     if (!w) {
         printf("Error writing to file: %s\n", strerror(errno));
     }
-    w = write(file, "\n", 1); // adds newline character after 
+    w = write(file, "\n", 1); // adds newline character after
 }
 
 // signal handler; takes int signal; no return, always exits
@@ -29,6 +30,26 @@ static void sighandler(int sig) {
         log_error(strerror(errno)); // won't crash on segfaults // exits gracefully
         exit(-1);
     }
+}
+// https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
+
+struct termios orig_termios;
+
+void disableRawMode() {
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+}
+
+
+void enableRawMode() {
+  tcgetattr(STDIN_FILENO, &orig_termios);
+  atexit(disableRawMode);
+  struct termios raw = orig_termios;
+  raw.c_lflag &= ~(ECHO | ICANON);
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+}
+
+void prompt(char * path){
+  printf("%s djshell $ ", path);
 }
 
 // main launch loop; takes no args; returns an int (should always return 0)
@@ -49,7 +70,6 @@ int launch_shell() {
     }
 
     printf("Please separate all arguments with spaces!\n");
-
     // loops until exit is asked or ^C sent
     while (1) {
 
@@ -58,12 +78,41 @@ int launch_shell() {
         getcwd(tmp_path, CHARMAX);
         char *path = strrchr(tmp_path, '/');
 
-        printf("%s djshell $ ", path);
+        prompt(path);
+        fflush(stdout);
         char *buffer = calloc(CHARMAX, sizeof(char)); // fix sizing?
 
         // waits for input from stdin
-        fgets(buffer, CHARMAX, stdin);
+        // fgets(buffer, CHARMAX, stdin);
+        enableRawMode();
+        char c;
+        unsigned int buffer_int = 0;
+        while(read(STDIN_FILENO, &c, 1) == 1 && c != 10){
+          switch (c) {
+            case 127:
+              // backspace
+              if (buffer_int >0){
+                buffer_int--;
+                buffer[buffer_int] = '\0';
+                // clear current terminal line and reset to front of terminal
+                printf("\33[2K\r");
+                prompt(path);
+                printf("%s", buffer);
+                fflush(stdout);
+              }
+              break;
 
+            default:
+              printf("%c", c);
+              buffer[buffer_int] = c;
+              fflush(stdout);
+              buffer_int ++;
+              break;
+          }
+
+        }
+        printf("\n");
+        disableRawMode();
         write(file, buffer, strlen(buffer));
 
         char *tmp;

@@ -13,6 +13,7 @@
 - History logging: all commands are logged in history.txt
 
 ## Attempted Features
+using ncurse to deal with raw input, but soon realized that its way overkill
 
 ## Bugs / Things to Know
 - On Mac devices only, using echo on 11-letter words will return odd messages
@@ -22,14 +23,19 @@
 - Using < assumes everything after < is a filename
     - echo hello < test.txt | wc will treat "test.txt | wc" as a name
 
+## Citations
+ - https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
+    - Used their code to read in raw input
+
+
 ## Function Headers
 ```
 int launch_shell();
 char * strip(char *line);
 void log_error(char *message);
-char ** parse_args(char *line); 
+char ** parse_args(char *line);
 static void sighandler(int sig);
-int execute_pipe(char *src, char *dest); 
+int execute_pipe(char *src, char *dest);
 int execute(char **args, int fd, int dest);
 int run(char *currentCommand, int fd, int dest);
-``` 
+```
