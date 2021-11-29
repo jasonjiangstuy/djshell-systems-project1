@@ -44,6 +44,8 @@ void enableRawMode() {
   tcgetattr(STDIN_FILENO, &orig_termios);
   atexit(disableRawMode);
   struct termios raw = orig_termios;
+  // read in input char by char + dont print out charaters that are inputed
+  // we will handle that seperatly
   raw.c_lflag &= ~(ECHO | ICANON);
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
@@ -62,7 +64,7 @@ int launch_shell() {
     signal(SIGINT, sighandler);
 
     // uses a history file to track commands for lseeking (TO IMPLEMENT)
-    int file = open("history.txt", O_CREAT | O_RDWR | O_APPEND);
+    int file = open("history.txt", O_CREAT | O_RDWR | O_APPEND, 0777);
     if (file == -1) {
         printf("Error with launching shell\n");
         log_error(strerror(errno));
@@ -84,12 +86,14 @@ int launch_shell() {
 
         // waits for input from stdin
         // fgets(buffer, CHARMAX, stdin);
+        // raw input
         enableRawMode();
         char c;
+        char escape[4];
         unsigned int buffer_int = 0;
         while(read(STDIN_FILENO, &c, 1) == 1 && c != 10){
-          switch (c) {
-            case 127:
+          if (iscntrl(c)) {
+            if (c == 127){
               // backspace
               if (buffer_int >0){
                 buffer_int--;
@@ -100,29 +104,33 @@ int launch_shell() {
                 printf("%s", buffer);
                 fflush(stdout);
               }
-              break;
+            }else{
+              // printf("%d\n", c);
+              read(STDIN_FILENO, &escape, 2) == 1;
+              // printf("ESCAPE charaters%s\n", escape);
+              if (!strcmp(escape, "[A")){
+                printf("uparrow pressed\n");
+                // uparrow pressed
+              }            }
 
-            default:
+          }else{
               printf("%c", c);
               buffer[buffer_int] = c;
               fflush(stdout);
               buffer_int ++;
-              break;
-          }
-
+            }
         }
         printf("\n");
         disableRawMode();
+        // end of raw mode
         write(file, buffer, strlen(buffer));
-
         char *tmp;
         // runs a loop separating on ;
         while ((tmp = strsep(&buffer, ";"))) {
-            // null padding for safety
-            tmp[strlen(tmp) - 1] = '\0';
             if (isspace(tmp[0])) {
                 tmp++;
             }
+            // printf("TMP:%s\n", tmp);
             char * currentCommand = tmp;
             int counter;
             // loops over command to find |, <, > (>>)
@@ -133,6 +141,7 @@ int launch_shell() {
                     // tmp + counter + 1 is the character after the null
                     int status = execute_pipe(currentCommand, strip(tmp+counter+1));
                     if (status) {
+                        printf("| error\n");
                         log_error(strerror(errno));
                     }
                     // sets currentcommand[0] to null so there is nothing left in the string to parse
@@ -216,6 +225,7 @@ int launch_shell() {
                 run(currentCommand, fd, -1);
             }
         }
+
     }
     return 0;
 }
