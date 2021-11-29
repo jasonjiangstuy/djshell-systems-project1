@@ -4,25 +4,29 @@
 #include "runs.h"
 #include "parsing.h"
 #include "includes.h"
+#include <ncurses.h>
 
 // Logs errors and events to errorlog; takes error message; returns void
 void log_error(char *message) {
-    printf("Error: %s\n", message); // prints all errors --> errors don't cause crashing
+    printw("Error: %s\n", message); // prints all errors --> errors don't cause crashing
     int file = open("error_log.txt", O_CREAT | O_WRONLY | O_APPEND); // opens an error_log
     if (file == -1) {
-        printf("Error opening error log: %s\n", strerror(errno));
+        printw("Error opening error log: %s\n", strerror(errno));
     }
     int w = write(file, message, strlen(message));
     if (!w) {
-        printf("Error writing to file: %s\n", strerror(errno));
+        printw("Error writing to file: %s\n", strerror(errno));
     }
-    w = write(file, "\n", 1); // adds newline character after 
+    w = write(file, "\n", 1); // adds newline character after
 }
 
 // signal handler; takes int signal; no return, always exits
 static void sighandler(int sig) {
     if (sig == SIGINT) {
-        printf("\nExiting Shell\n"); // exits shell gracefully on ^C
+        printw("\nExiting Shell\n"); // exits shell gracefully on ^C
+        // exit curse mode
+        endwin();
+
         exit(0);
     }
     if (sig == SIGSEGV) {
@@ -34,8 +38,8 @@ static void sighandler(int sig) {
 // main launch loop; takes no args; returns an int (should always return 0)
 int launch_shell() {
 
-    printf("Launching shell\n");
-
+    printw("Launching shell\n");
+    refresh();
     // signalhandler
     signal(SIGSEGV, sighandler);
     signal(SIGINT, sighandler);
@@ -43,12 +47,13 @@ int launch_shell() {
     // uses a history file to track commands for lseeking (TO IMPLEMENT)
     int file = open("history.txt", O_CREAT | O_RDWR | O_APPEND);
     if (file == -1) {
-        printf("Error with launching shell\n");
+        printw("Error with launching shell\n");
         log_error(strerror(errno));
         exit(0);
     }
 
-    printf("Please separate all arguments with spaces!\n");
+    printw("Please separate all arguments with spaces!\n");
+    refresh();
 
     // loops until exit is asked or ^C sent
     while (1) {
@@ -58,17 +63,43 @@ int launch_shell() {
         getcwd(tmp_path, CHARMAX);
         char *path = strrchr(tmp_path, '/');
 
-        printf("%s djshell $ ", path);
+        printw("%s djshell $ ", path);
+        refresh();
         char *buffer = calloc(CHARMAX, sizeof(char)); // fix sizing?
 
         // waits for input from stdin
-        fgets(buffer, CHARMAX, stdin);
+        char ch = 0;
+        unsigned int buffer_i = 0;
+        int y;
+        int x;
+        // while enter is not pressed, lets show the charaters on screen
+        while (ch != 10){
+          switch (ch) {
+            case 127:
+            // backspace
+              buffer_i --;
+              buffer[buffer_i] = '\0';
+              getyx(y, x)
+
+            default:
+            // character entered
+              ch = getch();
+              printw("%c", ch);
+              refresh();
+              buffer[buffer_i] = ch;
+              buffer_i ++;
+          }
+        }
+
+        // fgets(buffer, CHARMAX, stdin);
 
         write(file, buffer, strlen(buffer));
 
         char *tmp;
         // runs a loop separating on ;
         while ((tmp = strsep(&buffer, ";"))) {
+          printw("%s", tmp);
+          refresh();
             // null padding for safety
             tmp[strlen(tmp) - 1] = '\0';
             if (isspace(tmp[0])) {

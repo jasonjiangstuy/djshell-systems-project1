@@ -1,5 +1,9 @@
 # djshell-systems-project1
 
+## Prerequisites
+- sudo apt-get install libncurses5-dev
+- used to implement history
+
 ## Implemented Features
 - Piping: Shell can pipe an indefinite number of commands
 - Redirection: >, >>, and < all work
@@ -27,9 +31,9 @@
 int launch_shell();
 char * strip(char *line);
 void log_error(char *message);
-char ** parse_args(char *line); 
+char ** parse_args(char *line);
 static void sighandler(int sig);
-int execute_pipe(char *src, char *dest); 
+int execute_pipe(char *src, char *dest);
 int execute(char **args, int fd, int dest);
 int run(char *currentCommand, int fd, int dest);
-``` 
+```

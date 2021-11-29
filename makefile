@@ -1,5 +1,5 @@
 all: parsing.o runs.o shell.o main.o
-	gcc -o djshell main.o shell.o runs.o parsing.o
+	gcc -lncurses -o djshell main.o shell.o runs.o parsing.o
 
 parsing.o: parsing.c parsing.h includes.h
 	gcc -c parsing.c
@@ -11,7 +11,7 @@ shell.o: shell.c shell.h
 	gcc -c shell.c
 
 main.o: main.c
-	gcc -c main.c 
+	gcc -c main.c
 
 clean:
 	rm -rf *.o
