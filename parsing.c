@@ -13,7 +13,7 @@ char * strip(char *line) {
     for ( ; ptr[0] != '\0'; ptr++) {
         if (!isspace(ptr[0])) {
           break;
-        } 
+        }
         else {
             ptr[0] = '\0';
         }
@@ -23,12 +23,12 @@ char * strip(char *line) {
     for (i = strlen(ptr) - 1; i >= 0; i --) {
         if (!isspace(ptr[i])) {
             break;
-        } 
+        }
         else {
             ptr[i] = '\0';
         }
     }
-    
+
     return ptr;
 }
 
@@ -60,4 +60,24 @@ char ** parse_args(char *line) {
     }
 
     return arr;
+}
+
+char * parse_history(char file[100]){
+  char arr[100];
+  int fd = open(file,O_RDONLY,0);
+  lseek(fd,-2,SEEK_END);
+
+  int size = 0;
+  read(fd,arr,sizeof(char));
+
+  while (arr[0] != '\n'){
+    lseek(fd,-2*sizeof(char),SEEK_CUR);
+    read(fd,arr,sizeof(char));
+    size++;
+  }
+
+  read(fd,arr,size);
+  return &arr;
+  // return parse_args(arr);
+
 }
