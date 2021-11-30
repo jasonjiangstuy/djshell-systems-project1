@@ -7,6 +7,33 @@
 #include "includes.h"
 
 char *(colors[8]) = {BRED, BGRN, BYEL, BBLU, BMAG, BCYN, BWHT, reset};
+char *(colorNames[8]) = {"RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN", "WHITE", "NORMAL"};
+
+float yvalue(float x){
+  return x* x / (2.0f * (x * x - x) + 1.0f);
+}
+int randomizeColor(){
+  int randomColor;
+  // immeditarly flush stdout 
+  setbuf(stdout, NULL);
+  // float delay = .1;
+  float t =0;
+
+  // for (; delay < 4; delay *= 1.25){
+  for (; t < 1; t += .1){
+    // printf("%f\n", yvalue(t));
+    printf("\33[2K\r");
+    randomColor = rand() % 8;
+    printf("%s", colors[randomColor]);
+    printf("Picking Termianl Color: %s", colorNames[randomColor]);
+    // fflush(stdout);
+    sleep(.75 + yvalue(t));
+  }
+  printf("\n");
+  // char x = '\n';
+  setlinebuf(stdout);
+  return randomColor;
+}
 
 // Logs errors and events to errorlog; takes error message; returns void
 void log_error(char *message) {
@@ -19,7 +46,7 @@ void log_error(char *message) {
     if (!w) {
         printf("Error writing to file: %s\n", strerror(errno));
     }
-    w = write(file, "\n", 1); // adds newline character after 
+    w = write(file, "\n", 1); // adds newline character after
 }
 
 // signal handler; takes int signal; no return, always exits
@@ -38,7 +65,8 @@ static void sighandler(int sig) {
 int launch_shell() {
 
     srand( time(NULL) );
-    printf("%s", colors[rand() % 8]);
+    int choiceColor = randomizeColor();
+    // printf("%s", colors[rand() % 8]);
 
     printf("Launching shell\n");
 
@@ -59,7 +87,7 @@ int launch_shell() {
     // loops until exit is asked or ^C sent
     while (1) {
 
-        printf("%s", colors[rand() % 8]);
+        printf("%s", colors[choiceColor]);
 
         // gets filepath to display
         char *tmp_path = calloc(CHARMAX, sizeof(char));
