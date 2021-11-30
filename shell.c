@@ -89,7 +89,9 @@ void prompt(char * path){
 int launch_shell() {
 
     srand( time(NULL) );
-    int choiceColor = randomizeColor();
+    // TURN ON LATER
+    // int choiceColor = randomizeColor();
+
     // printf("%s", colors[rand() % 8]);
 
     printf("Launching shell\n");
@@ -107,11 +109,14 @@ int launch_shell() {
     }
 
     printf("Please separate all arguments with spaces!\n");
+    // open file to get history
+    int history = open_history();
+
     // loops until exit is asked or ^C sent
     while (1) {
 
         // printf("%s", colors[choiceColor]);
-
+        lseek(history, 0, SEEK_END);
         // gets filepath to display
         char *tmp_path = calloc(CHARMAX, sizeof(char));
         getcwd(tmp_path, CHARMAX);
@@ -120,15 +125,22 @@ int launch_shell() {
         prompt(path);
         fflush(stdout);
         char *buffer = calloc(CHARMAX, sizeof(char)); // fix sizing?
+        char *dummybuffer = calloc(CHARMAX, sizeof(char)); // fix sizing?
 
         // waits for input from stdin
         // fgets(buffer, CHARMAX, stdin);
         // raw input
         enableRawMode();
         char c;
-        char escape[4];
+        char * escape = calloc(2, sizeof(char));
         unsigned int buffer_int = 0;
+        int alreadyinputed = 0;
         while(read(STDIN_FILENO, &c, 1) == 1 && c != 10){
+// 0 is present, positive numbers is the past
+          // 0 if did not used arrow keys, 1 if did
+          // FILE* f = fdopen(history, "r");
+          // int size = ftell(f);
+          // printf("%d\n", size);
           if (iscntrl(c)) {
             if (c == 127){
               // backspace
@@ -143,12 +155,35 @@ int launch_shell() {
               }
             }else{
               // printf("%d\n", c);
-              read(STDIN_FILENO, &escape, 2) == 1;
+              read(STDIN_FILENO, escape, 2) == 1;
               // printf("ESCAPE charaters%s\n", escape);
               if (!strcmp(escape, "[A")){
-                printf("uparrow pressed\n");
+                // printf("uparrow pressed\n");
                 // uparrow pressed
-              }            }
+                alreadyinputed = 1;
+                int size = prevhistory(history);
+                parse_data(history, buffer, size, strlen(buffer));
+                buffer_int = size;
+                printf("\33[2K\r");
+                prompt(path);
+                printf("%s", buffer);
+                fflush(stdout);
+              }else if(!strcmp(escape, "[B")){
+                // down arrow pressed
+                nexthistory(history);
+                // printf("%c\n", );
+                int size = nexthistory(history);
+                prevhistory(history);
+
+                parse_data(history, buffer, size, strlen(buffer));
+                buffer_int = size;
+
+                printf("\33[2K\r");
+                prompt(path);
+                printf("%s", buffer);
+                fflush(stdout);
+              }
+            }
 
           }else{
               printf("%c", c);
@@ -160,7 +195,15 @@ int launch_shell() {
         printf("\n");
         disableRawMode();
         // end of raw mode
+        // if (alreadyinputed){
+        //   // we need to rewrite the temp history command
+        //   parse_prevhistory(file);
+        //   // move the poiner back a line
+        // }
         write(file, buffer, strlen(buffer));
+        char * hold = "\n";
+        write(file, hold, 1);
+
         char *tmp;
         // runs a loop separating on ;
         while ((tmp = strsep(&buffer, ";"))) {
@@ -251,6 +294,7 @@ int launch_shell() {
                 else if (tmp[counter] == '<') {
                     tmp[counter] = '\0';
                     // sets for read only
+                    // printf("COMMAND: %s FILE: %s\n", currentCommand, strip(tmp + counter + 1));
                     int fd = open(strip(tmp + counter + 1), O_RDONLY);
                     run(currentCommand, fd, STDIN_FILENO);
                     *currentCommand = '\0';

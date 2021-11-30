@@ -44,7 +44,7 @@ int execute(char **args, int fd, int dest) {
         int status = execvp(args[0], args);
         if (status == -1) {
             log_error(strerror(errno));
-            printf("testchild:\n");
+            // printf("testchild:\n");
 
             exit(0);
         }

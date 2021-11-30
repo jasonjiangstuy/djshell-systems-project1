@@ -1,6 +1,6 @@
 // Standard includes used everywhere
 
-#ifndef INCLUDES 
+#ifndef INCLUDES
 #define INCLUDES "defined"
 
 // preprocessor variables
@@ -19,5 +19,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
-
+#include <sys/types.h>
+#include "parsing.h"
 #endif

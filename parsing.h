@@ -10,9 +10,10 @@ char * strip(char *line);
 char ** parse_args(char *line);
 //opens command history file; sets position to end
 int open_history();
-//parsing for previous command in history file
-char ** parse_prevhistory(int fd);
-//parsing for current/next command in history file
-char ** parse_nexthistory(int fd);
+void parse_data(int fd, char * str, int size, int arrSize);
+void prevhistoryWipe(int fd);
+int prevhistory(int fd);
+int nexthistory(int fd);
+
 
 #endif
