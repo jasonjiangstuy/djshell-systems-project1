@@ -17,6 +17,7 @@ int execute(char **args, int fd, int dest) {
         }
         else return 0;
     }
+
     int f = fork(); // forks bcs execvp auto-exits
     if (f) {
         int status;
@@ -30,9 +31,9 @@ int execute(char **args, int fd, int dest) {
     else {
         if (fd != -1) { // if using redirection, redirects output
             if (dest == -2) { // -2 for dest signifies &>
-                dup(STDERR_FILENO);
+                // dup(STDERR_FILENO);
                 dup(STDOUT_FILENO);
-                dup2(fd, STDERR_FILENO);
+                // dup2(fd, STDERR_FILENO);
                 dup2(fd, STDOUT_FILENO);
             }
             else {
@@ -43,10 +44,14 @@ int execute(char **args, int fd, int dest) {
         int status = execvp(args[0], args);
         if (status == -1) {
             log_error(strerror(errno));
+            printf("testchild:\n");
+
             exit(0);
         }
+
         return 0;
     }
+
 }
 
 // executes piping commands; takes 2 args, second to pipe first output into; returns int status
