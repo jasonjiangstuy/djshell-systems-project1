@@ -8,5 +8,9 @@
 char * strip(char *line);
 // parsing for argument vector; breaks on spaces; adds trailing null for execvp; takes a string; returns an array of strings
 char ** parse_args(char *line);
+//opens command history file; sets position to end
+int open_history();
+//parsing for previous command in history file
+char ** parse_prevhistory(int fd);
 
 #endif
