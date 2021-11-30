@@ -11,10 +11,12 @@
 - Allows combining indefinitely many pipes followed by > or >>
 - Error logging: all errors are recorded in error_log.txt
 - History logging: all commands are logged in history.txt
+- Random color prompt: Terminal sets to a different colors after every command
 
 ## Attempted Features
 
 ## Bugs / Things to Know
+- Command prompt will take a maximum of 100 characters
 - On Mac devices only, using echo on 11-letter words will return odd messages
     - Ex: echo NORMAL TEST returns NORMAL TEST�@P�
     - Sometimes, this also crashes the terminal

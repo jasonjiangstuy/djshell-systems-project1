@@ -2,8 +2,11 @@
 
 // includes
 #include "runs.h"
+#include "colors.h"
 #include "parsing.h"
 #include "includes.h"
+
+char *(colors[8]) = {BRED, BGRN, BYEL, BBLU, BMAG, BCYN, BWHT, reset};
 
 // Logs errors and events to errorlog; takes error message; returns void
 void log_error(char *message) {
@@ -34,6 +37,9 @@ static void sighandler(int sig) {
 // main launch loop; takes no args; returns an int (should always return 0)
 int launch_shell() {
 
+    srand( time(NULL) );
+    printf("%s", colors[rand() % 8]);
+
     printf("Launching shell\n");
 
     // signalhandler
@@ -52,6 +58,8 @@ int launch_shell() {
 
     // loops until exit is asked or ^C sent
     while (1) {
+
+        printf("%s", colors[rand() % 8]);
 
         // gets filepath to display
         char *tmp_path = calloc(CHARMAX, sizeof(char));
@@ -167,6 +175,7 @@ int launch_shell() {
                 run(currentCommand, fd, -1);
             }
         }
+        printf(reset);
     }
     return 0;
 }
