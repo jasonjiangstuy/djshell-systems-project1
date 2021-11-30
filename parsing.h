@@ -12,5 +12,7 @@ char ** parse_args(char *line);
 int open_history();
 //parsing for previous command in history file
 char ** parse_prevhistory(int fd);
+//parsing for current/next command in history file
+char ** parse_nexthistory(int fd);
 
 #endif

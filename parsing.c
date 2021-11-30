@@ -85,3 +85,20 @@ char ** parse_prevhistory(int fd){
 
   return parse_args(arr);
 }
+
+char ** parse_nexthistory(int fd){
+  char arr[100];
+  int size = 1;
+  read(fd,arr,sizeof(char));
+
+  while (arr[0] != '\n'){
+    read(fd,arr,sizeof(char));
+    size++;
+  }
+  
+  lseek(fd,-size,SEEK_CUR);
+  read(fd,arr,size);
+  arr[size-1] = 0;
+
+  return parse_args(arr);
+}
