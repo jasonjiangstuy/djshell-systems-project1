@@ -62,11 +62,14 @@ char ** parse_args(char *line) {
     return arr;
 }
 
-char * parse_history(char file[100]){
-  char arr[100];
-  int fd = open(file,O_RDONLY,0);
-  lseek(fd,-2,SEEK_END);
+int open_history(){
+  int fd = open("history.txt",O_RDONLY);
+  lseek(fd,0,SEEK_END);
+  return fd;
+}
 
+char ** parse_prevhistory(int fd){
+  char arr[100];
   int size = 0;
   read(fd,arr,sizeof(char));
 
@@ -77,7 +80,25 @@ char * parse_history(char file[100]){
   }
 
   read(fd,arr,size);
-  return &arr;
-  // return parse_args(arr);
+  lseek(fd,-size-2,SEEK_CUR);
+  arr[size] = 0;
 
+  return parse_args(arr);
+}
+
+char ** parse_nexthistory(int fd){
+  char arr[100];
+  int size = 1;
+  read(fd,arr,sizeof(char));
+
+  while (arr[0] != '\n'){
+    read(fd,arr,sizeof(char));
+    size++;
+  }
+  
+  lseek(fd,-size,SEEK_CUR);
+  read(fd,arr,size);
+  arr[size-1] = 0;
+
+  return parse_args(arr);
 }
