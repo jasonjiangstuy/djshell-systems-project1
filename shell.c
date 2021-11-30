@@ -5,36 +5,41 @@
 #include "colors.h"
 #include "parsing.h"
 #include "includes.h"
-#include <unistd.h>
-#include <termios.h>
 
+// initializer arrays for color printing
 char *(colors[8]) = {BRED, BGRN, BYEL, BBLU, BMAG, BCYN, BWHT, reset};
 char *(colorNames[8]) = {"RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN", "WHITE", "NORMAL"};
 
-float yvalue(float x){
-  return x* x / (2.0f * (x * x - x) + 1.0f);
-}
-int randomizeColor(){
-  int randomColor;
-  // immeditarly flush stdout
-  setbuf(stdout, NULL);
-  // float delay = .1;
-  float t =0;
+// struct declarations
+struct termios orig_termios;
 
-  // for (; delay < 4; delay *= 1.25){
-  for (; t < 1; t += .1){
-    // printf("%f\n", yvalue(t));
-    printf("\33[2K\r");
-    randomColor = rand() % 8;
-    printf("%s", colors[randomColor]);
-    printf("Picking Termianl Color: %s", colorNames[randomColor]);
-    // fflush(stdout);
-    sleep(.75 + yvalue(t));
-  }
-  printf("\n");
-  // char x = '\n';
-  setlinebuf(stdout);
-  return randomColor;
+// holds ease out function, returns delay between each color at specific time
+float yvalue(float x) {
+    return x*x / (2.0f * (x * x - x) + 1.0f);
+}
+
+
+// function for printing random colors; takes no args; returns random color
+int randomizeColor() {
+    int randomColor;
+    // immediately flush stdout
+    setbuf(stdout, NULL);
+    // float delay = .1;
+  	float t =0;
+
+  	// for (; delay < 4; delay *= 1.25){
+  	for (; t < 1; t += .1) {
+    	printf("\33[2K\r");
+    	randomColor = rand() % 8;
+    	printf("%s", colors[randomColor]);
+    	printf("Picking Terminal Color: %s", colorNames[randomColor]);
+    	// fflush(stdout);
+    	sleep(.75 + yvalue(t));
+  	}
+  	printf("\n");
+  	// char x = '\n';
+  	setlinebuf(stdout);
+  	return randomColor;
 }
 
 // Logs errors and events to errorlog; takes error message; returns void
@@ -64,25 +69,25 @@ static void sighandler(int sig) {
 }
 // https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
 
-struct termios orig_termios;
-
+// disables Raw Mode and makes stdin buffered; takes and returns nothing
 void disableRawMode() {
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+	tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
 }
 
-
+// allows for reading one char at a time; takes and returns nothing
 void enableRawMode() {
-  tcgetattr(STDIN_FILENO, &orig_termios);
-  atexit(disableRawMode);
-  struct termios raw = orig_termios;
-  // read in input char by char + dont print out charaters that are inputed
-  // we will handle that seperatly
-  raw.c_lflag &= ~(ECHO | ICANON);
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+  	tcgetattr(STDIN_FILENO, &orig_termios);
+  	atexit(disableRawMode);
+  	struct termios raw = orig_termios;
+  	// read in input char by char + dont print out charaters that are inputed
+  	// we will handle that separately
+  	raw.c_lflag &= ~(ECHO | ICANON);
+  	tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
 
-void prompt(char * path){
-  printf("%s djshell $ ", path);
+// prints out djshell prompt
+void prompt(char * path) {
+	printf("%s djshell $ ", path);
 }
 
 // main launch loop; takes no args; returns an int (should always return 0)
@@ -90,7 +95,6 @@ int launch_shell() {
 
     srand( time(NULL) );
     int choiceColor = randomizeColor();
-    // printf("%s", colors[rand() % 8]);
 
     printf("Launching shell\n");
 
@@ -110,13 +114,12 @@ int launch_shell() {
     // loops until exit is asked or ^C sent
     while (1) {
 
-        // printf("%s", colors[choiceColor]);
-
         // gets filepath to display
         char *tmp_path = calloc(CHARMAX, sizeof(char));
         getcwd(tmp_path, CHARMAX);
         char *path = strrchr(tmp_path, '/');
 
+        // used for generating colored output
         prompt(path);
         fflush(stdout);
         char *buffer = calloc(CHARMAX, sizeof(char)); // fix sizing?
@@ -128,33 +131,33 @@ int launch_shell() {
         char c;
         char escape[4];
         unsigned int buffer_int = 0;
-        while(read(STDIN_FILENO, &c, 1) == 1 && c != 10){
-          if (iscntrl(c)) {
-            if (c == 127){
-              // backspace
-              if (buffer_int >0){
-                buffer_int--;
-                buffer[buffer_int] = '\0';
-                // clear current terminal line and reset to front of terminal
-                printf("\33[2K\r");
-                prompt(path);
-                printf("%s", buffer);
-                fflush(stdout);
-              }
-            }else{
-              // printf("%d\n", c);
-              read(STDIN_FILENO, &escape, 2) == 1;
-              // printf("ESCAPE charaters%s\n", escape);
-              if (!strcmp(escape, "[A")){
-                printf("uparrow pressed\n");
-                // uparrow pressed
-              }            }
-
-          }else{
-              printf("%c", c);
-              buffer[buffer_int] = c;
-              fflush(stdout);
-              buffer_int ++;
+        while(read(STDIN_FILENO, &c, 1) == 1 && c != 10) {
+        	if (iscntrl(c)) {
+            	if (c == 127) {
+              		// backspace
+              		if (buffer_int >0) {
+                		buffer_int--;
+                		buffer[buffer_int] = '\0';
+                		// clear current terminal line and reset to front of terminal
+                		printf("\33[2K\r");
+                		prompt(path);
+                		printf("%s", buffer);
+                		fflush(stdout);
+              		}
+            	} 
+				else {
+              		read(STDIN_FILENO, &escape, 2);
+              		if (!strcmp(escape, "[A")) {
+                		printf("uparrow pressed\n");
+                		// uparrow pressed
+              		}      
+			  	}
+			} 
+			else {
+              	printf("%c", c);
+              	buffer[buffer_int] = c;
+              	fflush(stdout);
+              	buffer_int ++;
             }
         }
         printf("\n");
@@ -167,7 +170,6 @@ int launch_shell() {
             if (isspace(tmp[0])) {
                 tmp++;
             }
-            // printf("TMP:%s\n", tmp);
             char * currentCommand = tmp;
             int counter;
             // loops over command to find |, <, > (>>)

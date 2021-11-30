@@ -62,13 +62,15 @@ char ** parse_args(char *line) {
     return arr;
 }
 
-int open_history(){
+//opens command history file; sets position to end; takes null; returns file descriptor
+int open_history() {
   int fd = open("history.txt",O_RDONLY);
   lseek(fd,0,SEEK_END);
   return fd;
 }
 
-char ** parse_prevhistory(int fd){
+//parsing for previous command in history file; takes file descriptor; returns command string
+char ** parse_prevhistory(int fd) {
   char arr[100];
   int size = 0;
   read(fd,arr,sizeof(char));
@@ -86,6 +88,7 @@ char ** parse_prevhistory(int fd){
   return parse_args(arr);
 }
 
+// parsing for current/next command in history file; takes file descriptor; returns command string
 char ** parse_nexthistory(int fd){
   char arr[100];
   int size = 1;

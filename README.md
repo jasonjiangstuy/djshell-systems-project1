@@ -5,17 +5,18 @@
 - Redirection: >, >>, and < all work
     - "command n>(>) file" will redirect file descriptor n to file
     - "command &>(>) file" will redirect both stdout and stderror to file
-    - Order doesn't matter: >n, >>n, >&, >>& all work, too
+    - Order doesn't matter: >(>)n, >(>)& all work, too
     - Please only use one of the three per prompt
     - < should only be used on its own
 - Allows combining indefinitely many pipes followed by > or >>
 - Error logging: all errors are recorded in error_log.txt
 - History logging: all commands are logged in history.txt
-- Random color prompt: Terminal sets to a different colors after every command
+- Random color prompt: Terminal sets to a different colors at start
     - Credit to GitHub user RabaDabaDoba for providing the .h file
 
 ## Attempted Features
-using ncurse to deal with raw input, but soon realized that its way overkill
+- Using ncurse to deal with raw input: soon realized that it's overkill
+- Accessing speakers to play "remixed" music generated through user input (commands), but apparently accessing speakers to play sound is very difficult in C and variable depending on OS
 
 ## Bugs / Things to Know
 - Command prompt will take a maximum of 100 characters
@@ -31,14 +32,21 @@ using ncurse to deal with raw input, but soon realized that its way overkill
  - https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
     - Used their code to read in raw input
 
-
 ## Function Headers
 ```
+int open_history();
 int launch_shell();
+int randomizeColor();
+void enableRawMode();
+float yvalue(float x);
+void disableRawMode();
+void prompt(char * path);
 char * strip(char *line);
 void log_error(char *message);
 char ** parse_args(char *line);
 static void sighandler(int sig);
+char ** parse_prevhistory(int fd);
+char ** parse_nexthistory(int fd);
 int execute_pipe(char *src, char *dest);
 int execute(char **args, int fd, int dest);
 int run(char *currentCommand, int fd, int dest);
