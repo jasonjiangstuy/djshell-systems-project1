@@ -12,11 +12,13 @@
 - Error logging: all errors are recorded in error_log.txt
 - History logging: all commands are logged in history.txt
 - Random color prompt: Terminal sets to a different colors after every command
+    - Credit to GitHub user RabaDabaDoba for providing the .h file
 
 ## Attempted Features
 
 ## Bugs / Things to Know
 - Command prompt will take a maximum of 100 characters
+- We kindly ask all commands and symbols are separated by spaces; the shell may work anyways, but we programmed with spaces assumed so 'tis best to avoid unforeseen errors and use spaces
 - On Mac devices only, using echo on 11-letter words will return odd messages
     - Ex: echo NORMAL TEST returns NORMAL TEST�@P�
     - Sometimes, this also crashes the terminal
