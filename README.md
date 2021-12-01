@@ -44,10 +44,11 @@ void disableRawMode();
 void prompt(char * path);
 char * strip(char *line);
 void log_error(char *message);
-char ** parse_args(char *line);
+void parse_data(int fd, char * str, int size, int arrSize);
 static void sighandler(int sig);
-char ** parse_prevhistory(int fd);
-char ** parse_nexthistory(int fd);
+void prevhistoryWipe(int fd); // unused
+int prevhistory(int fd);
+int nexthistory(int fd);
 int execute_pipe(char *src, char *dest);
 int execute(char **args, int fd, int dest);
 int run(char *currentCommand, int fd, int dest);
