@@ -94,7 +94,7 @@ void prompt(char * path) {
 int launch_shell() {
 
     srand( time(NULL) );
-    // int choiceColor = randomizeColor(); ///////////////////////////////
+    int choiceColor = randomizeColor(); 
 
     printf("Launching shell\n");
 
