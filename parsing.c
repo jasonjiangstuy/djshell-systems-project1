@@ -154,7 +154,7 @@ int nexthistory(int fd){
   if (test[0] == EOF){
     // reached end of file
     printf("EOF\n");
-    lseek(fd,0, SEEK_END);
+    lseek(fd,-1, SEEK_END);
     // no command exists
     return 0;
   }
