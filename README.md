@@ -13,6 +13,8 @@
 - History logging: all commands are logged in history.txt, use arrow keys to access pass commands.
 - Random color prompt: Terminal sets to a different colors at start
     - Credit to GitHub user RabaDabaDoba for providing the .h file
+- Accessing command history: use the up and down arrow keys to access previously inputted commands, as in the real shell
+    - Check the Bugs section for important info regarding this feature
 
 ## Attempted Features
 - Using ncurse to deal with raw input: soon realized that it's overkill
@@ -27,7 +29,7 @@
     - Error is not present on other OS, including school machines
 - Using < assumes everything after < is a filename
     - echo hello < test.txt | wc will treat "test.txt | wc" as a name
-- When you use the down arrow all the way to the end of the history, then press the uparrow, it will skip the last command, however, you can still access it when you arrow down.
+- When you use the down arrow all the way to the end of the history, then press the up arrow, it will skip the last command; however, you can still access it when you arrow down.
 
 ## Citations
  - https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
